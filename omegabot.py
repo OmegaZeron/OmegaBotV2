@@ -2,6 +2,8 @@ import socket
 import re
 import irc
 import commands
+from aiohttp import web
+import socketio
 
 #CHAT_MSG = re.compile(r"^:\w+!\w+@\w+\.tmi\.twitch\.tv PRIVMSG #\w+ :")
 
@@ -12,6 +14,8 @@ s.send("PASS {}\r\n".format(irc.PASS).encode("utf-8"))
 s.send("NICK {}\r\n".format(irc.NICK).encode("utf-8"))
 for chan in irc.CHAN:
     s.send("JOIN {}\r\n".format(chan).encode("utf-8"))
+for tag in irc.TAGS:
+    s.send("CAP REQ :twitch.tv/{}\r\n".format(tag).encode("utf-8)"))
 
 connected = False
 while True:
@@ -39,4 +43,5 @@ while True:
                 findChan = str.find(chanIndex, "#") + 3
                 channel = response[findChan:findMsg + 1]
                 print(channel + ": " + username + ": " + message)
+                
                 commands.checkMessage(s, message, username, channel)

@@ -2,8 +2,12 @@
     "name": "omegabot",
     "version": "yes",
     "main": "main.js",
-    "scripts":
-    {
+    "scripts": {
         "start": "electron ."
+    },
+    "dependencies": {
+        "vue": "^2.5.16",
+        "vue-tabs-component": "^1.4.0",
+        "w2ui": "^1.4.3"
     }
 }
