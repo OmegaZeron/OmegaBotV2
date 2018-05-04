@@ -1,19 +1,37 @@
 import random
 import irc
 import math
+import win32com.client
 
-def checkMessage(s, message, username, chan):
-    if message.startswith("!tpun"):
+# TODO get userlist
+
+def checkMessage(s, message, username, chan, badges):
+    if tokenize(message)[1] == "!tpun":
         pun(s, chan)
     elif message.startswith("!tslot"):
         slots(s, chan)
     elif message.startswith("!troll"):
         roll(s, message, username, chan)
+    elif message.startswith("!ttts"):
+        tts(message)
+    elif message.startswith("!tban"):
+        ban(s, message, username, chan)
 
-def me(thing):
-    print("OmegaBot: " + thing)
+def tokenize(message, token = " "):
+    output = message.split(token)
+    output.insert(0, len(output))
+    return output
+
+def isMod(token):
+    if "moderator/1" in token or "broadcaster/1" in token:
+        return True
+    return False
+
+def me(thing, place):
+    print(place + ": OmegaBot: " + thing)
 
 def chat(sock, msg, chan):
+    me(msg, chan)
     sock.send("PRIVMSG {} :{}\r\n".format(chan, msg).encode())
 
 def checkFileCount(file):
@@ -27,6 +45,17 @@ def checkFileCount(file):
     file.close
     return count
 
+def tts(message):
+    speaker = win32com.client.Dispatch("SAPI.SpVoice")
+    speaker.speak(message)
+
+def ban(s, message, username, chan):
+    tokens = tokenize(message)
+    if tokens[2] == username:
+        chat(s, "Yeah I'd ban them too, seems like a dingus OpieOP", chan)
+    else:
+        chat(s, "Now why would you want to do that? " + tokens[2] + " seems like a cool cat, unlike you, " + username + " Jebaited", chan)
+
 def pun(s, chan):
     count = checkFileCount(open("puns.txt"))
     rand = random.randint(1, count)
@@ -39,7 +68,6 @@ def pun(s, chan):
         else:
             puns.readline()
     puns.close()
-    me(output)
     chat(s, output, chan)
 
 def slots(s, chan):
@@ -64,7 +92,6 @@ def slots(s, chan):
     slot2 = randSlot()
     slot3 = randSlot()
     final = slot1 + " | " + slot2 + " | " + slot3
-    me(final)
     chat(s, final, chan)
 
 def roll(s, message, user, chan):
@@ -83,5 +110,4 @@ def roll(s, message, user, chan):
             rand += random.randint(1, roll2)
         del x
         final = user + " rolled " + str(roll1) + " " + str(roll2) + "-sided" + (" die " if roll1 == 1 else " dice ") + "for a total of " + str(rand)
-        me(final)
         chat(s, final, chan)

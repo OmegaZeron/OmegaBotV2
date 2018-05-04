@@ -1,5 +1,7 @@
-import Vue from 'vue';
-import {Tabs, Tab} from 'vue-tabs-component';
+import VueTabs from 'vue-nav-tabs'
+import 'vue-nav-tabs/themes/vue-tabs.css'
+Vue.use(VueTabs)
 
-Vue.component('tabs', Tabs);
-Vue.component('tab', Tab);
+new Vue({
+    el: "#app"
+});

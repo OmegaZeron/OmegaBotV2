@@ -1,12 +1,15 @@
 <html>
 <head>
-    <script src="./node_modules/vue/dist/vue.min.js"></script>
+    <script type="module" src="ui.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/vue-nav-tabs/themes/vue-tabs.css">
+    <script src="https://unpkg.com/vue-nav-tabs/dist/vue-tabs.js"></script>
 </head>
 <body>
     <!-- <div id="tabs"></div>
     <div id="tab-content" style="height: 600px; border: 1px solid #ddd; border-top: 0px;">
-        <div id="chat" style="height:600px;"></div>
+        <div id="chat" style="height:50px;"></div>
     </div> -->
+
     <!-- <div class="tabs-component">
         <ul class="tabs-component-tabs">
             <li class="tabs-component-tab">
@@ -22,16 +25,21 @@
             </section>
         </div>
     </div> -->
-    <!-- <div>
-        <tabs>
-            <tab name="tab1">
-                NoU
-            </tab>
-            <tab name="tab2">
-                Yes
-            </tab>
-        </tabs>
-    </div> -->
+
+    <div id="app">
+        <vue-tabs>
+            <v-tab title="First tab">
+                First tab content
+            </v-tab>
+        
+            <v-tab title="Second tab">
+                Second tab content
+            </v-tab>
+        
+            <v-tab title="Third tab">
+                Third tab content
+            </v-tab>
+        </vue-tabs>
+    </div>
 </body>
-    <script type="module" src="ui.js"></script>
 </html>

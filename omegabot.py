@@ -2,8 +2,8 @@ import socket
 import re
 import irc
 import commands
-from aiohttp import web
-import socketio
+# from aiohttp import web
+# import socketio
 
 #CHAT_MSG = re.compile(r"^:\w+!\w+@\w+\.tmi\.twitch\.tv PRIVMSG #\w+ :")
 
@@ -33,15 +33,13 @@ while True:
             msg = response.find("End of /NAMES list")
             msg2 = response.find("twitch.tv JOIN #")
             if msg == -1 and msg2 == -1:
-                findNick = str.find(response, "!")
-                username = response[1:findNick]
-                msgIndex = response[3:]
-                findMsg = str.find(msgIndex, ":") + 1
-                message = msgIndex[findMsg:]
-                message = message.rstrip()
-                chanIndex = response[3:]
-                findChan = str.find(chanIndex, "#") + 3
-                channel = response[findChan:findMsg + 1]
+                tokens = commands.tokenize(response, ";")
+                # print(tokens)
+                badges = tokens[1]
+                username = (commands.tokenize(tokens[3], "="))[2]
+                cmSetup = (commands.tokenize(tokens[12], "#"))[2]
+                channel = "#" + (commands.tokenize(cmSetup))[1]
+                message = ((commands.tokenize(cmSetup, ":"))[2]).rstrip()
                 print(channel + ": " + username + ": " + message)
                 
-                commands.checkMessage(s, message, username, channel)
+                commands.checkMessage(s, message, username, channel, badges)
