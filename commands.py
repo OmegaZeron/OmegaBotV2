@@ -8,13 +8,13 @@ import win32com.client
 def checkMessage(s, message, username, chan, badges):
     if tokenize(message)[1] == "!tpun":
         pun(s, chan)
-    elif message.startswith("!tslot"):
+    elif tokenize(message)[1] == "!tslot":
         slots(s, chan)
-    elif message.startswith("!troll"):
+    elif tokenize(message)[1] == "!troll" and tokenize(message)[0] >= 3:
         roll(s, message, username, chan)
-    elif message.startswith("!ttts"):
+    elif tokenize(message)[1] == "!ttts" and tokenize(message)[0] >= 2:
         tts(message)
-    elif message.startswith("!tban"):
+    elif tokenize(message)[1] == "!tban" and tokenize(message)[0] >= 2:
         ban(s, message, username, chan)
 
 def tokenize(message, token = " "):
@@ -22,8 +22,8 @@ def tokenize(message, token = " "):
     output.insert(0, len(output))
     return output
 
-def isMod(token):
-    if "moderator/1" in token or "broadcaster/1" in token:
+def isMod(badge):
+    if "moderator/1" in badge or "broadcaster/1" in badge:
         return True
     return False
 
