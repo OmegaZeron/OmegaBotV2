@@ -13,7 +13,7 @@ def checkMessage(s, message, username, chan, badges):
     elif tokenize(message)[1] == "!troll" and tokenize(message)[0] >= 3:
         roll(s, message, username, chan)
     elif tokenize(message)[1] == "!ttts" and tokenize(message)[0] >= 2:
-        tts(message)
+        tts(username, message)
     elif tokenize(message)[1] == "!tban" and tokenize(message)[0] >= 2:
         ban(s, message, username, chan)
 
@@ -42,12 +42,12 @@ def checkFileCount(file):
             count += 1
         else:
             done = True
-    file.close
+    file.close()
     return count
 
-def tts(message):
+def tts(username, message):
     speaker = win32com.client.Dispatch("SAPI.SpVoice")
-    speaker.speak(message)
+    speaker.speak(username + " says " + message)
 
 def ban(s, message, username, chan):
     tokens = tokenize(message)
