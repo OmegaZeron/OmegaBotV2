@@ -15,6 +15,8 @@ s.send("NICK {}\r\n".format(irc.NICK).encode("utf-8"))
 for tag in irc.TAGS:
     s.send("CAP REQ :twitch.tv/{}\r\n".format(tag).encode("utf-8)"))
 for chan in irc.CHAN:
+    if chan.find("#") == -1:
+        chan = "#" + chan
     s.send("JOIN {}\r\n".format(chan).encode("utf-8"))
 
 connected = False
@@ -30,24 +32,47 @@ while True:
         print("Pong")
     else:
         if connected == True:
-            print(response)
-            # EONL = response.find("End of /NAMES list")
-            # JOIN = response.find("twitch.tv JOIN #")
-            # if EONL == -1 and JOIN == -1:
+            # to check if I'm still connected
+            # s.send("Ping :tmi.twitch.tv\r\n".encode("utf-8"))
+            # responds with ":tmi.twitch.tv PONG tmi.twitch.tv :tmi.twitch.tv"
+
+            # print(response)
             # (DONE IN TEST.PY) get userlist from api JSON (done here or in JS?) ex: http://tmi.twitch.tv/group/user/lirik/chatters
             if str.find(response, "PRIVMSG") != -1:
-                # TODO filter USERSTATE, ROOMSTATE for slowmode etc.
-                tokens = commands.tokenize(response, ";")
-                badges = tokens[1]
-                username = commands.tokenize(tokens[3], "=")[2]
-                cmSetup = commands.tokenize(tokens[12], "#")[2]
-                channel = "#" + commands.tokenize(cmSetup)[1]
-                message = (commands.tokenize(cmSetup, ":")[2]).rstrip()
-                print(channel + ": " + username + ": " + message)
-                commands.checkMessage(s, message, username, channel, badges)
+                if str.find(commands.tokenize(response, ";")[2], "bits") != -1:
+                    pass
+                    # print(response)
+                    # tokens = commands.tokenize(response, ";")
+                    # username = commands.tokenize(tokens[4], "=")[2]
+                    # cmSetup = commands.tokenize(tokens[13], "#")[2]
+                    # channel = commands.tokenize(cmSetup)[1]
+                    # message = commands.tokenize(cmSetup, ":")[2]
+                    # bitAmount = commands.tokenize(tokens[2], "=")[2]
+                    # print(channel + ": " + username + " used " + bitAmount + " bits!")
+                else:
+                    pass
+                    # TODO filter USERSTATE, ROOMSTATE for slowmode etc.
+                    # tokens = commands.tokenize(response, ";")
+                    # badges = tokens[1]
+                    # username = commands.tokenize(tokens[3], "=")[2]
+                    # cmSetup = commands.tokenize(tokens[12], "#")[2]
+                    # channel = "#" + commands.tokenize(cmSetup)[1]
+                    # message = (commands.tokenize(cmSetup, ":")[2]).rstrip()
+                    # print(channel + ": " + username + ": " + message)
+                    # commands.checkMessage(s, message, username, channel, badges)
             elif str.find(response, "USERNOTICE") != -1:
-                pass # TODO subscription things
+                pass
+                # print(response)
+                # tokens = commands.tokenize(response, ";")
+                # username = commands.tokenize(tokens[3], "=")[2]
+                # channel = commands.tokenize(tokens[18], "#")[2]
+                # msgType = commands.tokenize(tokens[8], "=")[2]
+                # types: ritual (welcoming new chatters), sub, resub
+                # subTime = 0
+                # if msgType == "resub":
+                    # subTime = commands.tokenize(tokens[9], "=")[2]
             elif str.find(response, "JOIN") != -1 or str.find(response, "PART") != -1:
                 pass # TODO joins and parts
-            elif str.find(response, "USERSTATE") != -1:
-                pass # TODO figure out if this matters
+            # elif str.find(response, "USERSTATE") != -1:
+            #     pass # TODO figure out if this matters
+                # print(response)
