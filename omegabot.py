@@ -1,13 +1,47 @@
 import socket
-# import re
 import irc
-import commands
+from commands import checkMessage, tokenize
+import threading
+import time
+from urllib.request import urlopen
+import json
+import os
+import atexit
 # from aiohttp import web
 # import socketio
 
-#CHAT_MSG = re.compile(r"^:\w+!\w+@\w+\.tmi\.twitch\.tv PRIVMSG #\w+ :")
+def updateUserlist(channel):
+    myData = threading.local()
+    myData.terminate = False
+    while myData.terminate == False:
+        print("Updating userlist")
+        with urlopen("http://tmi.twitch.tv/group/user/{}/chatters".format(channel)) as url:
+            data = json.loads(url.read())
+            with open(".\\userlists\\" + channel + "Userlist.txt", 'w') as output:
+                json.dump(data, output)
+        time.sleep(10)
+        if (channel not in activeChannels):
+            print("Channel " + channel + " left. Exiting userlist thread")
+            os.remove(".\\userlists\\" + channel + "Userlist.txt")
+            myData.terminate = True
+
+def startThread(channel):
+    thing = threading.Thread(target=updateUserlist, args=(channel,))
+    thing.daemon = True
+    thing.start()
+
+def exitProgram():
+    for channel in activeChannels:
+        try:
+            print("Removing file " + channel + "Userlist.txt")
+            os.remove(".\\userlists\\" + channel + "Userlist.txt")
+        except FileNotFoundError:
+            print("File " + channel + "Userlist.txt not found")
+atexit.register(exitProgram)
 
 # network functions go here
+activeChannels = []
+
 s = socket.socket()
 s.connect((irc.HOST, irc.PORT))
 s.send("PASS {}\r\n".format(irc.PASS).encode("utf-8"))
@@ -18,6 +52,9 @@ for chan in irc.CHAN:
     if chan.find("#") == -1:
         chan = "#" + chan
     s.send("JOIN {}\r\n".format(chan).encode("utf-8"))
+    activeChannels.append(tokenize(chan, "#")[2])
+for chan in activeChannels:
+    startThread(chan)
 
 connected = False
 while True:
@@ -39,38 +76,38 @@ while True:
             # print(response)
             # (DONE IN TEST.PY) get userlist from api JSON (done here or in JS?) ex: http://tmi.twitch.tv/group/user/lirik/chatters
             if str.find(response, "PRIVMSG") != -1:
-                if str.find(commands.tokenize(response, ";")[2], "bits") != -1:
+                if str.find(tokenize(response, ";")[2], "bits") != -1:
                     pass
                     # print(response)
-                    # tokens = commands.tokenize(response, ";")
-                    # username = commands.tokenize(tokens[4], "=")[2]
-                    # cmSetup = commands.tokenize(tokens[13], "#")[2]
-                    # channel = commands.tokenize(cmSetup)[1]
-                    # message = commands.tokenize(cmSetup, ":")[2]
-                    # bitAmount = commands.tokenize(tokens[2], "=")[2]
+                    # tokens = tokenize(response, ";")
+                    # username = tokenize(tokens[4], "=")[2]
+                    # cmSetup = tokenize(tokens[13], "#")[2]
+                    # channel = tokenize(cmSetup)[1]
+                    # message = tokenize(cmSetup, ":")[2]
+                    # bitAmount = tokenize(tokens[2], "=")[2]
                     # print(channel + ": " + username + " used " + bitAmount + " bits!")
                 else:
-                    pass
+                    # pass
                     # TODO filter USERSTATE, ROOMSTATE for slowmode etc.
-                    # tokens = commands.tokenize(response, ";")
-                    # badges = tokens[1]
-                    # username = commands.tokenize(tokens[3], "=")[2]
-                    # cmSetup = commands.tokenize(tokens[12], "#")[2]
-                    # channel = "#" + commands.tokenize(cmSetup)[1]
-                    # message = (commands.tokenize(cmSetup, ":")[2]).rstrip()
-                    # print(channel + ": " + username + ": " + message)
-                    # commands.checkMessage(s, message, username, channel, badges)
+                    tokens = tokenize(response, ";")
+                    badges = tokens[1]
+                    username = tokenize(tokens[3], "=")[2]
+                    cmSetup = tokenize(tokens[12], "#")[2]
+                    channel = "#" + tokenize(cmSetup)[1]
+                    message = (tokenize(cmSetup, ":")[2]).rstrip()
+                    print(channel + ": " + username + ": " + message)
+                    checkMessage(s, message, username, channel, badges)
             elif str.find(response, "USERNOTICE") != -1:
                 pass
                 # print(response)
-                # tokens = commands.tokenize(response, ";")
-                # username = commands.tokenize(tokens[3], "=")[2]
-                # channel = commands.tokenize(tokens[18], "#")[2]
-                # msgType = commands.tokenize(tokens[8], "=")[2]
+                # tokens = tokenize(response, ";")
+                # username = tokenize(tokens[3], "=")[2]
+                # channel = tokenize(tokens[18], "#")[2]
+                # msgType = tokenize(tokens[8], "=")[2]
                 # types: ritual (welcoming new chatters), sub, resub
                 # subTime = 0
                 # if msgType == "resub":
-                    # subTime = commands.tokenize(tokens[9], "=")[2]
+                    # subTime = tokenize(tokens[9], "=")[2]
             elif str.find(response, "JOIN") != -1 or str.find(response, "PART") != -1:
                 pass # TODO joins and parts
             # elif str.find(response, "USERSTATE") != -1:
