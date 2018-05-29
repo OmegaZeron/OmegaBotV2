@@ -11,19 +11,23 @@ import atexit
 # import socketio
 
 def updateUserlist(channel):
-    myData = threading.local()
-    myData.terminate = False
-    while myData.terminate == False:
-        print("Updating userlist")
-        with urlopen("http://tmi.twitch.tv/group/user/{}/chatters".format(channel)) as url:
-            data = json.loads(url.read())
-            with open(".\\userlists\\" + channel + "Userlist.txt", 'w') as output:
-                json.dump(data, output)
-        time.sleep(10)
-        if (channel not in activeChannels):
-            print("Channel " + channel + " left. Exiting userlist thread")
-            os.remove(".\\userlists\\" + channel + "Userlist.txt")
-            myData.terminate = True
+    # myData = threading.local()
+    # myData.terminate = False
+    # while myData.terminate == False:
+    print("Updating userlist")
+    with urlopen("http://tmi.twitch.tv/group/user/{}/chatters".format(channel)) as url:
+        data = json.loads(url.read())
+        with open(".\\userlists\\" + channel + "Userlist.txt", 'w') as output:
+            json.dump(data, output)
+    # time.sleep(10)
+    # if (channel not in activeChannels):
+    #     print("Channel " + channel + " left. Exiting userlist thread")
+    #     os.remove(".\\userlists\\" + channel + "Userlist.txt")
+        # myData.terminate = True
+
+def removeUserlist(channel):
+    print("Channel " + channel + " left")
+    os.remove(".\\userlists\\" + channel + "Userlist.txt")
 
 def startThread(channel):
     thing = threading.Thread(target=updateUserlist, args=(channel,))
@@ -57,6 +61,7 @@ for chan in activeChannels:
     startThread(chan)
 
 connected = False
+cTime = time.time()
 while True:
     response = s.recv(1024).decode("utf-8")
     # print(response)
@@ -95,6 +100,9 @@ while True:
                     cmSetup = tokenize(tokens[12], "#")[2]
                     channel = "#" + tokenize(cmSetup)[1]
                     message = (tokenize(cmSetup, ":")[2]).rstrip()
+                    if (tokenize(message)[1] == "!tleave" and tokenize(message)[0] >= 2):
+                        print("Leaving " + tokenize(message)[2])
+                        activeChannels.remove(tokenize(message)[2])
                     print(channel + ": " + username + ": " + message)
                     checkMessage(s, message, username, channel, badges)
             elif str.find(response, "USERNOTICE") != -1:
@@ -113,3 +121,8 @@ while True:
             # elif str.find(response, "USERSTATE") != -1:
             #     pass # TODO figure out if this matters
                 # print(response)
+
+            if time.time() >= cTime + 5:
+                cTime = time.time()
+                for chan in activeChannels:
+                    startThread(chan)
