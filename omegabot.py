@@ -34,14 +34,18 @@ def startThread(channel):
     thing.daemon = True
     thing.start()
 
-def exitProgram():
+def clearUserlists():
     for channel in activeChannels:
         try:
             print("Removing file " + channel + "Userlist.txt")
             os.remove(".\\userlists\\" + channel + "Userlist.txt")
         except FileNotFoundError:
             print("File " + channel + "Userlist.txt not found")
-atexit.register(exitProgram)
+atexit.register(clearUserlists)
+
+def connect():
+    clearUserlists()
+    # do some connection things here. Figure out if socket needs to be closed first before trying to reconnect
 
 # network functions go here
 activeChannels = []
@@ -75,7 +79,13 @@ while True:
     else:
         if connected == True:
             # to check if I'm still connected
-            # s.send("Ping :tmi.twitch.tv\r\n".encode("utf-8"))
+            if time.time() >= cTime + 60:
+                cTime = time.time()
+                s.send("Ping :tmi.twitch.tv\r\n".encode("utf-8"))
+            if str.find(response, ":tmi.twitch.tv PONG tmi.twitch.tv :tmi.twitch.tv") == -1:
+                connected = False
+                print("Lost connection to server. Attempting to reconnect")
+                connect()
             # responds with ":tmi.twitch.tv PONG tmi.twitch.tv :tmi.twitch.tv"
 
             # print(response)
