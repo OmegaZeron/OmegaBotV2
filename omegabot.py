@@ -43,8 +43,21 @@ def clearUserlists():
             print("File " + channel + "Userlist.txt not found")
 atexit.register(clearUserlists)
 
-def connect():
-    clearUserlists()
+def connect(): # should this be async?
+    if activeChannels.count > 0:
+        clearUserlists()
+    s.connect((irc.HOST, irc.PORT))
+    s.send("PASS {}\r\n".format(irc.PASS).encode("utf-8"))
+    s.send("NICK {}\r\n".format(irc.NICK).encode("utf-8"))
+    for tag in irc.TAGS:
+        s.send("CAP REQ :twitch.tv/{}\r\n".format(tag).encode("utf-8)"))
+    for chan in irc.CHAN:
+        if chan.find("#") == -1:
+            chan = "#" + chan
+        s.send("JOIN {}\r\n".format(chan).encode("utf-8"))
+        activeChannels.append(tokenize(chan, "#")[2])
+    for chan in activeChannels:
+        startThread(chan)
     # do some connection things here. Figure out if socket needs to be closed first before trying to reconnect
 
 # network functions go here
@@ -65,6 +78,7 @@ for chan in activeChannels:
     startThread(chan)
 
 connected = False
+connectCheck = False
 cTime = time.time()
 while True:
     response = s.recv(1024).decode("utf-8")
@@ -73,16 +87,14 @@ while True:
         loadCheck = response.find(":tmi.twitch.tv 001 omegazeron :Welcome, GLHF!")
     if loadCheck != -1 and connected == False:
         connected = True
-    if response == "PING :tmi.twitch.tv\r\n":
-        s.send("PONG :tmi.twitch.tv\r\n".encode("utf-8"))
-        print("Pong")
+    # if response == "PING :tmi.twitch.tv\r\n":
+    #     s.send("PONG :tmi.twitch.tv\r\n".encode("utf-8"))
+    #     print("Pong")
     else:
         if connected == True:
             # to check if I'm still connected
-            if time.time() >= cTime + 60:
-                cTime = time.time()
-                s.send("Ping :tmi.twitch.tv\r\n".encode("utf-8"))
-            if str.find(response, ":tmi.twitch.tv PONG tmi.twitch.tv :tmi.twitch.tv") == -1:
+            # need to check if no PONG within 5 seconds? Not sure if anything will happen if there's no response at all
+            if connectCheck and str.find(response, ":tmi.twitch.tv PONG tmi.twitch.tv :tmi.twitch.tv") == -1:
                 connected = False
                 print("Lost connection to server. Attempting to reconnect")
                 connect()
@@ -131,6 +143,11 @@ while True:
             # elif str.find(response, "USERSTATE") != -1:
             #     pass # TODO figure out if this matters
                 # print(response)
+            
+            if time.time() >= cTime + 60:
+                cTime = time.time()
+                s.send("Ping :tmi.twitch.tv\r\n".encode("utf-8"))
+                connectCheck = True
 
             if time.time() >= cTime + 5:
                 cTime = time.time()
